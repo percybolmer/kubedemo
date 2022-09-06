@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hellogopher
+  namespace: hellogopher
+spec: # WHat state you desire for this object
+  selector:
+    matchLabels:
+      app: hellogopher
+  replicas: 1
+  template: # When Kubernetes creates new pods, Follow this template state
+    metadata:
+      labels:
+        app: hellogopher
+    spec:
+      containers:
+      - name: hellogopher
+        image: programmingpercy/hellogopher:5.0 # Dont use latest tag, 
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8080
+        resources:
+          requests:
+            memory: "1Mi"
+            cpu: "50m"
+          limits:
+            memory: "10Mi"
+            cpu: "100m" 
+        envFrom:
+        - configMapRef:
+            name: database-configs
+        env:
+        - name: DATABASE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: database-secrets
+              key: DATABASE_PASSWORD
+        readinessProbe:
+          initialDelaySeconds: 5
+          timeoutSeconds: 1
+          httpGet:
+            path: /
+            port: 8080
+        livenessProbe:
+          initialDelaySeconds: 5
+          timeoutSeconds: 1
+          failureThreshold: 3
+          httpGet:
+            path: /
+            port: 8080
